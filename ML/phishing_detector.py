@@ -4,28 +4,55 @@ Phishing URL Detection using Machine Learning
 Advanced Feature Engineering for URL Analysis
 """
 
-import pandas as pd
-import numpy as np
+import os
 import re
 import urllib.parse
-import tldextract
-import requests
+import warnings
 from urllib.parse import urlparse, parse_qs
-from sklearn.model_selection import train_test_split
+
+# Ensure external libraries have writable cache directories in restricted environments
+PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
+TLDEXTRACT_CACHE = os.path.join(PROJECT_ROOT, ".cache", "tldextract")
+MPL_CACHE = os.path.join(PROJECT_ROOT, ".cache", "matplotlib")
+
+os.makedirs(TLDEXTRACT_CACHE, exist_ok=True)
+os.makedirs(MPL_CACHE, exist_ok=True)
+
+os.environ.setdefault("TLDEXTRACT_CACHE_DIR", TLDEXTRACT_CACHE)
+os.environ.setdefault("MPLCONFIGDIR", MPL_CACHE)
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import requests
+import seaborn as sns
+import tldextract
+from difflib import SequenceMatcher
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-import seaborn as sns
-import warnings
+
 warnings.filterwarnings('ignore')
+
+BRAND_KEYWORDS = [
+    'google', 'facebook', 'amazon', 'apple', 'microsoft', 'paypal',
+    'ebay', 'netflix', 'twitter', 'instagram', 'linkedin', 'bank',
+    'chase', 'wellsfargo', 'citibank', 'boa', 'netflix', 'outlook',
+    'office365', 'icloud', 'gmail'
+]
+HOMOGRAPH_THRESHOLD = 0.6
 
 class PhishingDetector:
     def __init__(self):
         self.feature_names = []
         self.scaler = StandardScaler()
         self.model = None
+        self.tld_extractor = tldextract.TLDExtract(
+            cache_dir=TLDEXTRACT_CACHE,
+            suffix_list_urls=None  # use bundled data to avoid network access
+        )
         
     def extract_features(self, url):
         """
@@ -56,7 +83,7 @@ class PhishingDetector:
         features['query_length'] = len(query)
         
         # TLD analysis
-        extracted = tldextract.extract(url)
+        extracted = self.tld_extractor(url)
         features['subdomain_count'] = len(extracted.subdomain.split('.')) if extracted.subdomain else 0
         features['has_subdomain'] = 1 if extracted.subdomain else 0
         features['domain_name_length'] = len(extracted.domain)
@@ -73,6 +100,7 @@ class PhishingDetector:
         features['has_suspicious_keywords'] = self._has_suspicious_keywords(url)
         features['has_numbers_in_domain'] = self._has_numbers_in_domain(domain)
         features['has_mixed_case'] = self._has_mixed_case(domain)
+        features.update(self._extract_obfuscation_metrics(url))
         
         # Statistical features
         features['digit_ratio'] = sum(c.isdigit() for c in url) / len(url) if url else 0
@@ -93,7 +121,7 @@ class PhishingDetector:
         features['has_suspicious_params'] = self._has_suspicious_params(query)
         
         # Brand impersonation detection
-        features['suspicious_brand_usage'] = self._has_suspicious_brand_usage(url)
+        features.update(self._brand_feature_dict(parsed, extracted))
         
         # URL structure anomalies
         features['double_slash'] = 1 if '//' in url[url.find('://')+3:] else 0
@@ -161,12 +189,79 @@ class PhishingDetector:
         params = parse_qs(query)
         return 1 if any(param.lower() in suspicious_params for param in params.keys()) else 0
     
-    def _has_suspicious_brand_usage(self, url):
-        """Check for potential brand impersonation"""
-        brands = ['google', 'facebook', 'amazon', 'apple', 'microsoft', 'paypal', 'ebay']
-        url_lower = url.lower()
-        brand_count = sum(1 for brand in brands if brand in url_lower)
-        return 1 if brand_count > 0 else 0
+    def _brand_feature_dict(self, parsed, extracted):
+        """Generate brand-based impersonation features."""
+        url_lower = parsed.geturl().lower()
+        registered_domain = extracted.registered_domain or extracted.domain or ""
+        core_domain = extracted.domain or registered_domain
+        registered_lower = registered_domain.lower()
+        core_lower = core_domain.lower()
+        subdomain_lower = (extracted.subdomain or "").lower()
+        path_query = (parsed.path or "") + (parsed.query or "")
+        path_query_lower = path_query.lower()
+
+        brand_in_registered = any(brand in registered_lower for brand in BRAND_KEYWORDS)
+        brand_in_subdomain = subdomain_lower and any(brand in subdomain_lower for brand in BRAND_KEYWORDS)
+        brand_in_path = any(brand in path_query_lower for brand in BRAND_KEYWORDS)
+        brand_anywhere = brand_in_registered or brand_in_subdomain or brand_in_path or any(
+            brand in url_lower for brand in BRAND_KEYWORDS
+        )
+
+        registered_similarity = self._brand_similarity(core_lower)
+        subdomain_similarity = self._brand_similarity(subdomain_lower)
+        path_similarity = self._brand_similarity(path_query_lower)
+
+        homograph_flag = 1 if (registered_similarity >= HOMOGRAPH_THRESHOLD and registered_similarity < 1.0) else 0
+
+        return {
+            'suspicious_brand_usage': 1 if brand_anywhere else 0,
+            'brand_in_registered_domain': 1 if brand_in_registered else 0,
+            'brand_in_subdomain': 1 if brand_in_subdomain else 0,
+            'brand_in_path_or_query': 1 if brand_in_path else 0,
+            'brand_mismatch': 1 if brand_anywhere and not brand_in_registered else 0,
+            'brand_similarity_registered': registered_similarity,
+            'brand_similarity_subdomain': subdomain_similarity,
+            'brand_similarity_path': path_similarity,
+            'brand_homograph': homograph_flag,
+        }
+
+    def _brand_similarity(self, text):
+        """Return the best similarity ratio and matching brand for a given text."""
+        if not text:
+            return 0.0
+        best_ratio = 0.0
+        for brand in BRAND_KEYWORDS:
+            ratio = SequenceMatcher(None, text, brand).ratio()
+            if ratio > best_ratio:
+                best_ratio = ratio
+        return best_ratio
+
+    def _extract_obfuscation_metrics(self, url):
+        """Detect encoded or obfuscated sequences in the URL."""
+        if not url:
+            return {
+                'has_obfuscation': 0,
+                'num_obfuscated_chars': 0,
+                'obfuscation_ratio': 0.0,
+            }
+
+        percent_encoded = re.findall(r'%[0-9a-fA-F]{2}', url)
+        hex_encoded = re.findall(r'\\x[0-9a-fA-F]{2}', url)
+        unicode_encoded = re.findall(r'\\u[0-9a-fA-F]{4}', url)
+        html_entities = re.findall(r'&#x?[0-9a-fA-F]+;?', url)
+
+        total_tokens = (
+            len(percent_encoded)
+            + len(hex_encoded)
+            + len(unicode_encoded)
+            + len(html_entities)
+        )
+
+        return {
+            'has_obfuscation': 1 if total_tokens > 0 else 0,
+            'num_obfuscated_chars': total_tokens,
+            'obfuscation_ratio': total_tokens / len(url),
+        }
     
     def create_dataset(self, urls, labels):
         """

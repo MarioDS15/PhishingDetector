@@ -60,24 +60,18 @@ python3 example_usage.py
 
 ```
 CYSE610Project/
-├── setup_everything.py          # Complete setup script
-├── quick_setup.py               # Quick setup check
-├── ml_test.py                   # ML testing script
 ├── main.py                      # Full application
-├── example_usage.py             # Usage examples
+├── cli_url_check.py             # CLI entrypoint
 ├── ML/                          # Core ML components
-│   ├── __init__.py
 │   ├── phishing_detector.py
 │   └── URL/
 │       ├── __init__.py
-│       ├── url_phishing_detector.py
 │       ├── url_features.py
+│       ├── generate_enriched_url_dataset.py
 │       ├── URL Data/            # Datasets
-│       └── URL Results/         # Test results and graphs
-├── Setup/                       # Setup utilities
-│   ├── requirements.txt
-│   ├── download_dataset.py
-│   └── enhanced_dataset_collector.py
+│       └── URL Results/         # Model artifacts
+├── Setup/
+│   └── requirements.txt
 └── requirements.txt             # Main requirements file
 ```
 
@@ -89,8 +83,7 @@ CYSE610Project/
 - Verify all dependencies are installed
 
 ### Dataset Issues
-- Run `python3 Setup/enhanced_dataset_collector.py`
-- Check that `ML/URL/URL Data/enhanced_phishing_dataset.csv` exists
+- Ensure `ML/URL/URL Data/URL_Set.csv` exists (regenerate with `generate_enriched_url_dataset.py` if needed)
 
 ### Permission Errors
 - Use `pip3` instead of `pip`

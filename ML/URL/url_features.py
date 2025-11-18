@@ -7,10 +7,12 @@ Specific functions for extracting different types of URL features
 import re
 import urllib.parse
 import tldextract
+from difflib import SequenceMatcher
 from urllib.parse import urlparse, parse_qs
 import numpy as np
 
 class URLFeatureExtractor:
+    HOMOGRAPH_THRESHOLD = 0.6
     """Utility class for extracting specific URL features"""
     
     @staticmethod
@@ -149,7 +151,8 @@ class URLFeatureExtractor:
         features = {}
         
         url_lower = url.lower()
-        
+        parsed = urlparse(url_lower)
+
         # Suspicious keywords
         suspicious_keywords = [
             'login', 'verify', 'secure', 'account', 'update', 'confirm',
@@ -165,6 +168,30 @@ class URLFeatureExtractor:
         brands = ['google', 'facebook', 'amazon', 'apple', 'microsoft', 'paypal', 'ebay', 'netflix', 'twitter']
         features['brand_count'] = sum(1 for brand in brands if brand in url_lower)
         features['has_brand_names'] = 1 if features['brand_count'] > 0 else 0
+        try:
+            extracted = tldextract.extract(url)
+            registered_domain = extracted.registered_domain or extracted.domain or ""
+            registered_lower = registered_domain.lower()
+            subdomain_lower = (extracted.subdomain or "").lower()
+            features['brand_in_registered_domain'] = 1 if any(brand in registered_lower for brand in brands) else 0
+            features['brand_in_subdomain'] = 1 if subdomain_lower and any(brand in subdomain_lower for brand in brands) else 0
+        except Exception:
+            extracted = None
+            registered_lower = ""
+            subdomain_lower = ""
+            features['brand_in_registered_domain'] = 0
+            features['brand_in_subdomain'] = 0
+
+        path_query_lower = ((parsed.path or "") + (parsed.query or "")).lower()
+        features['brand_in_path_or_query'] = 1 if any(brand in path_query_lower for brand in brands) else 0
+        features['brand_mismatch'] = 1 if features['has_brand_names'] and not features['brand_in_registered_domain'] else 0
+        features['brand_similarity_registered'] = URLFeatureExtractor._brand_similarity_value(registered_lower, brands)
+        features['brand_similarity_subdomain'] = URLFeatureExtractor._brand_similarity_value(subdomain_lower, brands)
+        features['brand_similarity_path'] = URLFeatureExtractor._brand_similarity_value(path_query_lower, brands)
+        features['brand_homograph'] = 1 if (
+            features['brand_similarity_registered'] >= URLFeatureExtractor.HOMOGRAPH_THRESHOLD
+            and features['brand_similarity_registered'] < 1.0
+        ) else 0
         
         # URL shorteners
         shorteners = ['bit.ly', 'tinyurl.com', 'goo.gl', 't.co', 'ow.ly', 'is.gd', 'short.link']
@@ -172,10 +199,9 @@ class URLFeatureExtractor:
         
         # Suspicious TLDs
         suspicious_tlds = ['tk', 'ml', 'ga', 'cf', 'click', 'download', 'stream']
-        try:
-            extracted = tldextract.extract(url)
+        if extracted:
             features['has_suspicious_tld'] = 1 if extracted.suffix.lower() in suspicious_tlds else 0
-        except:
+        else:
             features['has_suspicious_tld'] = 0
         
         # IP address detection
@@ -183,6 +209,34 @@ class URLFeatureExtractor:
         features['has_ip_address'] = 1 if re.search(ip_pattern, url) else 0
         
         return features
+
+    @staticmethod
+    def extract_obfuscation_features(url):
+        """Extract features capturing URL obfuscation via encoding"""
+        if not url:
+            return {
+                'has_obfuscation': 0,
+                'num_obfuscated_chars': 0,
+                'obfuscation_ratio': 0.0,
+            }
+
+        percent_encoded = re.findall(r'%[0-9a-fA-F]{2}', url)
+        hex_encoded = re.findall(r'\\x[0-9a-fA-F]{2}', url)
+        unicode_encoded = re.findall(r'\\u[0-9a-fA-F]{4}', url)
+        html_entities = re.findall(r'&#x?[0-9a-fA-F]+;?', url)
+
+        total_tokens = (
+            len(percent_encoded)
+            + len(hex_encoded)
+            + len(unicode_encoded)
+            + len(html_entities)
+        )
+
+        return {
+            'has_obfuscation': 1 if total_tokens > 0 else 0,
+            'num_obfuscated_chars': total_tokens,
+            'obfuscation_ratio': total_tokens / len(url),
+        }
     
     @staticmethod
     def extract_statistical_features(url):
@@ -237,6 +291,17 @@ class URLFeatureExtractor:
         
         return entropy
 
+    @staticmethod
+    def _brand_similarity_value(text, brands):
+        if not text:
+            return 0.0
+        best_ratio = 0.0
+        for brand in brands:
+            ratio = SequenceMatcher(None, text, brand).ratio()
+            if ratio > best_ratio:
+                best_ratio = ratio
+        return best_ratio
+
 def extract_all_url_features(url):
     """Extract all URL features using the utility class"""
     extractor = URLFeatureExtractor()
@@ -246,6 +311,7 @@ def extract_all_url_features(url):
     features.update(extractor.extract_path_features(url))
     features.update(extractor.extract_query_features(url))
     features.update(extractor.extract_suspicious_patterns(url))
+    features.update(extractor.extract_obfuscation_features(url))
     features.update(extractor.extract_statistical_features(url))
     
     return features

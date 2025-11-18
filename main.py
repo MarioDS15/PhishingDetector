@@ -5,7 +5,6 @@ Uses expanded multi-source dataset with deduplication
 """
 
 from ML.phishing_detector import PhishingDetector
-from Setup.enhanced_dataset_collector import EnhancedDatasetCollector
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,6 +20,8 @@ def load_or_create_enhanced_dataset():
     """
     # Try different possible dataset locations
     possible_paths = [
+        'ML/URL/URL Data/URL_Set.csv',
+        'ML/URL/URL Data/Enhanced_URL_Dataset.csv',
         'ML/URL/URL Data/enhanced_phishing_dataset.csv',
         'ML/URL/URL Data/phishing_dataset.csv',
         'data/enhanced_phishing_dataset.csv'
@@ -90,12 +91,15 @@ def analyze_enhanced_dataset(df):
     print(f"Phishing URLs: {len(df[df['label'] == 1]):,} ({len(df[df['label'] == 1])/len(df)*100:.1f}%)")
     
     # Source analysis
-    print(f"\nSource Distribution:")
-    source_counts = df['source'].value_counts()
-    for source, count in source_counts.items():
-        phishing_count = len(df[(df['source'] == source) & (df['label'] == 1)])
-        legitimate_count = len(df[(df['source'] == source) & (df['label'] == 0)])
-        print(f"   {source}: {count:,} URLs (P: {phishing_count:,}, L: {legitimate_count:,})")
+    if 'source' in df.columns:
+        print(f"\nSource Distribution:")
+        source_counts = df['source'].value_counts()
+        for source, count in source_counts.items():
+            phishing_count = len(df[(df['source'] == source) & (df['label'] == 1)])
+            legitimate_count = len(df[(df['source'] == source) & (df['label'] == 0)])
+            print(f"   {source}: {count:,} URLs (P: {phishing_count:,}, L: {legitimate_count:,})")
+    else:
+        print("\nSource Distribution: not available (no 'source' column in dataset)")
     
     # URL length analysis
     df['url_length'] = df['url'].str.len()
@@ -337,10 +341,10 @@ def main():
     X = detector.create_dataset(df['url'].tolist(), df['label'].tolist())
     y = np.array(df['label'].tolist())
     
-    # Split data (85% train, 15% test)
+    # Split data (92.5% train, 7.5% test)
     from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.15, random_state=42, stratify=y
+        X, y, test_size=0.075, random_state=42, stratify=y
     )
     
     print(f"\nData split:")
@@ -361,7 +365,10 @@ def main():
     
     # Final summary
     print("\n=== FINAL ENHANCED SUMMARY ===")
-    print(f"Enhanced system with {len(df):,} URLs from {df['source'].nunique()} sources")
+    if 'source' in df.columns:
+        print(f"Enhanced system with {len(df):,} URLs from {df['source'].nunique()} sources")
+    else:
+        print(f"Enhanced system with {len(df):,} URLs (source information unavailable)")
     print(f"Model trained with {len(feature_importance)} advanced features")
     print(f"Final Accuracy: {results['accuracy']:.4f}")
     print(f"Final F1-Score: {results['f1']:.4f}")
@@ -373,9 +380,10 @@ def main():
     for i, (_, row) in enumerate(feature_importance.head(5).iterrows()):
         print(f"   {i+1}. {row['feature']}: {row['importance']:.4f}")
     
-    print(f"\nDataset Sources:")
-    for source, count in df['source'].value_counts().items():
-        print(f"   {source}: {count:,} URLs")
+    if 'source' in df.columns:
+        print(f"\nDataset Sources:")
+        for source, count in df['source'].value_counts().items():
+            print(f"   {source}: {count:,} URLs")
 
 if __name__ == "__main__":
     main()

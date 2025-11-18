@@ -21,16 +21,12 @@ CYSE610Project/
 ├── ML/                          # Core ML components
 │   ├── phishing_detector.py     # Basic phishing detector
 │   └── URL/                     # URL-specific components
-│       ├── url_phishing_detector.py  # URL-specific ML detector
 │       ├── url_features.py           # Feature extraction utilities
-│       ├── url_analyzer.py           # High-level URL analyzer
-│       ├── url_csv_exporter.py       # CSV export functionality
-│       └── URL Data/                 # Datasets
-│           ├── enhanced_phishing_dataset.csv
-│           └── phishing_dataset.csv
-└── Setup/                       # Setup utilities
-    ├── download_dataset.py
-    ├── enhanced_dataset_collector.py
+│       ├── generate_enriched_url_dataset.py
+│       ├── URL Data/                 # Datasets
+│       │   └── URL_Set.csv
+│       └── URL Results/              # Cached models and reports
+└── Setup/
     └── requirements.txt
 ```
 
@@ -82,14 +78,15 @@ print(f"Extracted {len(features)} features")
 
 ### **ML-Based Detection (After Training)**
 ```python
-from url_phishing_detector import URLPhishingDetector
+from phishing_detector import PhishingDetector
 
-# Train model (one time)
-detector = URLPhishingDetector()
-X = detector.create_url_dataset(urls, labels)
-detector.train_url_model(X_train, y_train)
+detector = PhishingDetector()
+urls = ["https://example.com", "https://suspicious.example"]
+labels = [0, 1]  # 0 = legitimate, 1 = phishing
 
-# Use for predictions
+X = detector.create_dataset(urls, labels)
+detector.train_model(X, labels)
+
 result = detector.predict_url("https://example.com")
 print(f"Prediction: {result['is_phishing']}")
 print(f"Confidence: {result['confidence']}")
