@@ -14,7 +14,7 @@ import os
 # Add ML directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'ML'))
 
-from ML.URL.url_phishing_detector import URLPhishingDetector
+from ML.phishing_detector import PhishingDetector
 
 
 def export_tree_to_dict(tree, feature_names):
@@ -155,7 +155,7 @@ def main():
     print("=== Phishing Detection Model Export ===\n")
 
     # Load dataset
-    dataset_path = 'ML/URL/URL Data/enhanced_phishing_dataset.csv'
+    dataset_path = 'ML/URL/URL Data/URL_Set.csv'
 
     if not os.path.exists(dataset_path):
         print(f"Error: Dataset not found at {dataset_path}")
@@ -169,24 +169,45 @@ def main():
     print(f"Columns: {df.columns.tolist()}")
 
     # Prepare data
-    if 'label' in df.columns:
-        labels = df['label']
-        urls = df['url']
-    else:
-        print("Error: Dataset must have 'url' and 'label' columns")
+    if 'label' not in df.columns:
+        print("Error: Dataset must have 'label' column")
         return
 
-    # Initialize detector
-    print("\nInitializing detector...")
-    detector = URLPhishingDetector()
+    # Check if features are already in the dataset
+    if 'url_length' in df.columns:
+        print("Using pre-computed features from dataset...")
+        # Extract feature columns (exclude non-feature columns)
+        exclude_cols = ['FILENAME', 'URL', 'label']
+        feature_cols = [col for col in df.columns if col not in exclude_cols]
+        X = df[feature_cols].values
 
-    # Create feature matrix
-    X = detector.create_url_dataset(urls.tolist(), labels.tolist())
-    y = labels.values
+        # Note: Keep original labels from dataset (0=phishing, 1=legitimate)
+        # The JavaScript code will be updated to interpret them correctly
+        y = df['label'].values
+        print("Note: Using dataset labels as-is (0=phishing, 1=legitimate)")
+
+        # Initialize detector
+        print("\nInitializing detector...")
+        detector = PhishingDetector()
+        detector.feature_names = feature_cols
+
+        print(f"Features: {len(feature_cols)}")
+        print(f"Samples: {len(X)}")
+    else:
+        print("Extracting features from URLs...")
+        labels = df['label']
+        urls = df['URL'] if 'URL' in df.columns else df['url']
+
+        # Initialize detector
+        detector = PhishingDetector()
+
+        # Create feature matrix
+        X = detector.create_dataset(urls.tolist(), labels.tolist())
+        y = labels.values
 
     # Train model
     print("\nTraining model...")
-    detector.train_url_model(X, y)
+    detector.train_model(X, y)
 
     print("\nModel training completed!")
     print(f"Number of features: {len(detector.feature_names)}")
