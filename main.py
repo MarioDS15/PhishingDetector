@@ -87,16 +87,16 @@ def analyze_enhanced_dataset(df):
     """
     print("\n=== ENHANCED DATASET ANALYSIS ===")
     print(f"Total URLs: {len(df):,}")
-    print(f"Legitimate URLs: {len(df[df['label'] == 0]):,} ({len(df[df['label'] == 0])/len(df)*100:.1f}%)")
-    print(f"Phishing URLs: {len(df[df['label'] == 1]):,} ({len(df[df['label'] == 1])/len(df)*100:.1f}%)")
+    print(f"Phishing URLs: {len(df[df['label'] == 0]):,} ({len(df[df['label'] == 0])/len(df)*100:.1f}%)")
+    print(f"Legitimate URLs: {len(df[df['label'] == 1]):,} ({len(df[df['label'] == 1])/len(df)*100:.1f}%)")
     
     # Source analysis
     if 'source' in df.columns:
         print(f"\nSource Distribution:")
         source_counts = df['source'].value_counts()
         for source, count in source_counts.items():
-            phishing_count = len(df[(df['source'] == source) & (df['label'] == 1)])
-            legitimate_count = len(df[(df['source'] == source) & (df['label'] == 0)])
+            phishing_count = len(df[(df['source'] == source) & (df['label'] == 0)])
+            legitimate_count = len(df[(df['source'] == source) & (df['label'] == 1)])
             print(f"   {source}: {count:,} URLs (P: {phishing_count:,}, L: {legitimate_count:,})")
     else:
         print("\nSource Distribution: not available (no 'source' column in dataset)")
@@ -105,8 +105,8 @@ def analyze_enhanced_dataset(df):
     df['url_length'] = df['url'].str.len()
     print(f"\nURL Length Statistics:")
     print(f"   Average URL length: {df['url_length'].mean():.1f}")
-    print(f"   Legitimate URLs - Average: {df[df['label']==0]['url_length'].mean():.1f}")
-    print(f"   Phishing URLs - Average: {df[df['label']==1]['url_length'].mean():.1f}")
+    print(f"   Phishing URLs - Average: {df[df['label']==0]['url_length'].mean():.1f}")
+    print(f"   Legitimate URLs - Average: {df[df['label']==1]['url_length'].mean():.1f}")
     print(f"   Min length: {df['url_length'].min()}")
     print(f"   Max length: {df['url_length'].max()}")
     
@@ -124,7 +124,7 @@ def analyze_enhanced_dataset(df):
     print(f"\nTop-Level Domain Analysis:")
     tld_counts = df['tld'].value_counts().head(10)
     for tld, count in tld_counts.items():
-        phishing_count = len(df[(df['tld'] == tld) & (df['label'] == 1)])
+        phishing_count = len(df[(df['tld'] == tld) & (df['label'] == 0)])
         print(f"     .{tld}: {count:,} ({phishing_count:,} phishing)")
     
     return df

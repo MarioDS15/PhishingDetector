@@ -81,8 +81,8 @@ print(f"Extracted {len(features)} features")
 from phishing_detector import PhishingDetector
 
 detector = PhishingDetector()
-urls = ["https://example.com", "https://suspicious.example"]
-labels = [0, 1]  # 0 = legitimate, 1 = phishing
+urls = ["https://legit.example", "https://phishing.example"]
+labels = [0, 1]  # 0 = legitimate, 1 = phishing (matches URL_Set.csv)
 
 X = detector.create_dataset(urls, labels)
 detector.train_model(X, labels)

@@ -67,9 +67,9 @@ class RandomForestModel {
         }
 
         // Aggregate predictions (majority vote)
-        // Note: Model was trained with dataset labels where 0=phishing, 1=legitimate
-        const phishingVotes = treePredictions.filter(p => p === 0).length;  // Class 0 = phishing
-        const legitimateVotes = treePredictions.filter(p => p === 1).length;  // Class 1 = legitimate
+        // Align with dataset: 0 = legitimate, 1 = phishing
+        const phishingVotes = treePredictions.filter(p => p === 1).length;      // Class 1 = phishing
+        const legitimateVotes = treePredictions.filter(p => p === 0).length;    // Class 0 = legitimate
         const totalVotes = treePredictions.length;
 
         const isPhishing = phishingVotes > legitimateVotes;

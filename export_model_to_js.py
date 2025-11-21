@@ -69,7 +69,8 @@ def export_model_to_json(detector, output_file='extension/models/model.json'):
         'n_estimators': detector.model.n_estimators,
         'feature_names': detector.feature_names,
         'n_features': len(detector.feature_names),
-        'classes': [0, 1],  # 0 = legitimate, 1 = phishing
+        # Dataset convention: 0 = legitimate, 1 = phishing (matches URL_Set.csv)
+        'classes': [0, 1],
         'trees': [],
         'scaler': {
             'mean': detector.scaler.mean_.tolist(),
@@ -121,6 +122,7 @@ def create_lightweight_model(detector, n_trees=20, output_file='extension/models
         'n_estimators': n_trees,
         'feature_names': detector.feature_names,
         'n_features': len(detector.feature_names),
+        # Dataset convention: 0 = legitimate, 1 = phishing (matches URL_Set.csv)
         'classes': [0, 1],
         'trees': [],
         'scaler': {
@@ -181,10 +183,9 @@ def main():
         feature_cols = [col for col in df.columns if col not in exclude_cols]
         X = df[feature_cols].values
 
-        # Note: Keep original labels from dataset (0=phishing, 1=legitimate)
-        # The JavaScript code will be updated to interpret them correctly
+        # Note: Keep original labels from dataset (0=legitimate, 1=phishing)
         y = df['label'].values
-        print("Note: Using dataset labels as-is (0=phishing, 1=legitimate)")
+        print("Note: Using dataset labels as-is (0=legitimate, 1=phishing)")
 
         # Initialize detector
         print("\nInitializing detector...")

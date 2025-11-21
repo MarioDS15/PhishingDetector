@@ -10,16 +10,7 @@ import urllib.parse
 import warnings
 from urllib.parse import urlparse, parse_qs
 
-# Ensure external libraries have writable cache directories in restricted environments
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
-TLDEXTRACT_CACHE = os.path.join(PROJECT_ROOT, ".cache", "tldextract")
-MPL_CACHE = os.path.join(PROJECT_ROOT, ".cache", "matplotlib")
-
-os.makedirs(TLDEXTRACT_CACHE, exist_ok=True)
-os.makedirs(MPL_CACHE, exist_ok=True)
-
-os.environ.setdefault("TLDEXTRACT_CACHE_DIR", TLDEXTRACT_CACHE)
-os.environ.setdefault("MPLCONFIGDIR", MPL_CACHE)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -50,7 +41,8 @@ class PhishingDetector:
         self.scaler = StandardScaler()
         self.model = None
         self.tld_extractor = tldextract.TLDExtract(
-            cache_dir=TLDEXTRACT_CACHE,
+            # Disable on-disk cache to avoid file lock timeouts
+            cache_dir=None,
             suffix_list_urls=None  # use bundled data to avoid network access
         )
         
@@ -267,18 +259,24 @@ class PhishingDetector:
         """
         Create feature matrix from URLs
         """
-        print("Extracting features from URLs...")
+        total = len(urls)
+        print(f"Extracting features from {total} URLs...")
         features_list = []
         
         for i, url in enumerate(urls):
-            if i % 1000 == 0:
-                print(f"Processed {i}/{len(urls)} URLs")
+            # Periodic progress updates so long runs don't look "stuck"
+            if i % 100 == 0:
+                pct = (i / total * 100) if total else 0
+                snippet = url[:80] + ("..." if len(url) > 80 else "")
+                print(f"[PhishingDetector.create_dataset] {i}/{total} URLs "
+                      f"({pct:5.1f}%) - current URL: {snippet}")
             
             try:
                 features = self.extract_features(url)
                 features_list.append(features)
             except Exception as e:
-                print(f"Error processing URL {url}: {e}")
+                print(f"[PhishingDetector.create_dataset] Error processing URL at index {i}: {url}")
+                print(f"   Exception: {e}")
                 # Fill with zeros if extraction fails
                 features_list.append({key: 0 for key in self.feature_names} if self.feature_names else {})
         
@@ -293,7 +291,7 @@ class PhishingDetector:
         """
         Train the phishing detection model
         """
-        print("Training Random Forest model...")
+        print("Training Random Forest model (this may take a while on large datasets)...")
         
         # Scale features
         X_train_scaled = self.scaler.fit_transform(X_train)
@@ -305,7 +303,8 @@ class PhishingDetector:
             min_samples_split=5,
             min_samples_leaf=2,
             random_state=42,
-            n_jobs=-1
+            n_jobs=-1,
+            verbose=1,  # enable internal progress reporting to stdout
         )
         
         self.model.fit(X_train_scaled, y_train)
