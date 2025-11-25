@@ -119,11 +119,11 @@ def cli_predict_url(detector: PhishingDetector, url: str) -> Dict[str, object]:
     prediction = detector.model.predict(sample_scaled)[0]
     proba = detector.model.predict_proba(sample_scaled)[0]
 
-    # Dataset labels: 0=legitimate, 1=phishing (matches URL_Set.csv)
-    # proba = [prob_class_0, prob_class_1] = [prob_legitimate, prob_phishing]
-    is_phishing = (prediction == 1)
-    legitimate_prob = float(proba[0])
-    phishing_prob = float(proba[1])
+    # Dataset labels: 0=phishing, 1=legitimate (matches URL_Set.csv)
+    # proba = [prob_class_0, prob_class_1] = [prob_phishing, prob_legitimate]
+    is_phishing = (prediction == 0)
+    phishing_prob = float(proba[0])
+    legitimate_prob = float(proba[1])
     confidence = phishing_prob if is_phishing else legitimate_prob
     
     heuristics = {}
