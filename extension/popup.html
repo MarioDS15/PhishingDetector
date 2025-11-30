@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Detector</title>
+    <link rel="stylesheet" href="css/popup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Phishing Detector</h1>
+            <p class="subtitle">ML-Powered URL Security</p>
+        </div>
+
+        <div class="status-section">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Analyzing current page...</p>
+            </div>
+
+            <div id="result" class="result" style="display: none;">
+                <div class="status-indicator">
+                    <div id="status-icon" class="status-icon"></div>
+                    <h2 id="status-text">Checking...</h2>
+                </div>
+
+                <div class="url-display">
+                    <strong>URL:</strong>
+                    <p id="current-url" class="url-text"></p>
+                </div>
+
+                <div class="confidence-section">
+                    <div class="confidence-label">
+                        <span>Confidence Score</span>
+                        <span id="confidence-value">0%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div id="confidence-fill" class="confidence-fill"></div>
+                    </div>
+                </div>
+
+                <div id="features-section" class="features-section" style="display: none;">
+                    <h3>🔍 Detection Reasons</h3>
+                    <ul id="feature-list" class="feature-list"></ul>
+                </div>
+
+                <div id="safe-section" class="safe-section" style="display: none;">
+                    <p>✅ This URL appears to be legitimate.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button id="recheck-btn" class="btn btn-primary">
+                🔄 Recheck
+            </button>
+            <button id="details-btn" class="btn btn-secondary">
+                📊 View Details
+            </button>
+        </div>
+
+        <div class="footer">
+            <p class="info-text">Powered by Random Forest ML (99.61% accuracy)</p>
+        </div>
+    </div>
+
+    <script src="js/url-features.js"></script>
+    <script src="js/ml-model.js"></script>
+    <script src="js/popup.js"></script>
+</body>
+</html>
