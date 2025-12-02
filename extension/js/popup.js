@@ -178,37 +178,91 @@ async function recheckCurrentPage() {
  */
 function showDetails() {
     if (!window.currentAnalysis) {
+        alert('No analysis data available');
         return;
     }
 
     const data = window.currentAnalysis;
 
+    // Build detection type info
+    let detectionInfo = '';
+    if (data.detectionType === 'combined') {
+        detectionInfo = `
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <strong>🔗 Combined Detection (80% URL + 20% Page)</strong><br>
+                <div style="margin-top: 10px;">
+                    <strong>URL Analysis:</strong> ${data.urlPrediction.isPhishing ? 'Phishing' : 'Legitimate'} (${data.urlPrediction.confidencePercent}%)<br>
+                    <strong>Page Analysis:</strong> ${data.pagePrediction.isPhishing ? 'Phishing' : 'Legitimate'} (${data.pagePrediction.confidencePercent}%)<br>
+                    <strong>Combined Result:</strong> ${data.isPhishing ? 'Phishing' : 'Legitimate'} (${data.confidencePercent}%)
+                </div>
+            </div>
+        `;
+    } else if (data.detectionType === 'page_only') {
+        detectionInfo = `
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <strong>📄 Page Analysis Only</strong><br>
+                <div style="margin-top: 10px;">
+                    URL analysis was skipped (localhost/file URL)
+                </div>
+            </div>
+        `;
+    } else if (data.detectionType === 'url_only') {
+        detectionInfo = `
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <strong>🔗 URL Analysis Only</strong><br>
+                <div style="margin-top: 10px;">
+                    Page analysis not available
+                </div>
+            </div>
+        `;
+    }
+
     // Create details popup
     const detailsHtml = `
-        <div style="padding: 20px; font-family: monospace; font-size: 12px;">
-            <h3>Detailed Analysis</h3>
+        <div style="padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <h2 style="color: #667eea; margin-bottom: 20px;">🛡️ Detailed Analysis</h2>
 
-            <div style="margin: 15px 0;">
-                <strong>Prediction:</strong> ${data.isPhishing ? 'PHISHING' : 'LEGITIMATE'}<br>
-                <strong>Confidence:</strong> ${data.confidencePercent}%<br>
-                <strong>Risk Level:</strong> ${data.riskLevel.toUpperCase()}<br>
-                <strong>Voting:</strong> ${data.phishingVotes} phishing / ${data.legitimateVotes} legitimate (${data.totalVotes} trees)
-            </div>
+            ${detectionInfo}
 
-            <div style="margin: 15px 0;">
-                <strong>Feature Values:</strong>
-                <div style="max-height: 200px; overflow-y: auto; margin-top: 10px;">
-                    ${Object.entries(data.features)
-                        .map(([key, value]) => `<div>${key}: ${typeof value === 'number' ? value.toFixed(4) : value}</div>`)
-                        .join('')}
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <strong>Overall Result</strong><br>
+                <div style="margin-top: 10px;">
+                    <strong>Prediction:</strong> <span style="color: ${data.isPhishing ? '#dc3545' : '#28a745'}; font-weight: bold;">${data.isPhishing ? '⚠️ PHISHING' : '✅ LEGITIMATE'}</span><br>
+                    <strong>Confidence:</strong> ${data.confidencePercent}%<br>
+                    ${data.riskLevel ? `<strong>Risk Level:</strong> ${data.riskLevel.toUpperCase()}<br>` : ''}
+                    ${data.totalVotes ? `<strong>Model Votes:</strong> ${data.phishingVotes || 0} phishing / ${data.legitimateVotes || 0} legitimate (${data.totalVotes} trees)` : ''}
                 </div>
             </div>
 
             ${data.explanations && data.explanations.length > 0 ? `
                 <div style="margin: 15px 0;">
-                    <strong>Detection Reasons:</strong>
-                    <ul style="margin-top: 10px;">
+                    <strong>🔍 Detection Reasons:</strong>
+                    <ul style="margin-top: 10px; line-height: 1.8;">
                         ${data.explanations.map(exp => `<li>${exp}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+
+            ${data.features && Object.keys(data.features).length > 0 ? `
+                <div style="margin: 15px 0;">
+                    <details>
+                        <summary style="cursor: pointer; font-weight: bold; margin-bottom: 10px;">📊 Feature Values (${Object.keys(data.features).length} features)</summary>
+                        <div style="max-height: 300px; overflow-y: auto; margin-top: 10px; font-family: monospace; font-size: 12px; background: white; padding: 10px; border-radius: 5px;">
+                            ${Object.entries(data.features)
+                                .map(([key, value]) => `<div style="padding: 3px 0;">${key}: ${typeof value === 'number' ? value.toFixed(4) : value}</div>`)
+                                .join('')}
+                        </div>
+                    </details>
+                </div>
+            ` : ''}
+
+            ${data.topFeatures && data.topFeatures.length > 0 ? `
+                <div style="margin: 15px 0;">
+                    <strong>🎯 Top Contributing Features:</strong>
+                    <ul style="margin-top: 10px; line-height: 1.8;">
+                        ${data.topFeatures.slice(0, 5).map(f =>
+                            `<li>${f.name}: ${f.value} (z-score: ${f.zScore.toFixed(2)})</li>`
+                        ).join('')}
                     </ul>
                 </div>
             ` : ''}

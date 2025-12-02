@@ -18,7 +18,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["js/content.js"],
+      "js": ["js/page-features.js", "js/page-model.js", "js/content.js"],
       "css": ["css/warning.css"],
       "run_at": "document_start"
     }
