@@ -90,6 +90,13 @@ class RandomForestModel {
             ? phishingVotes / totalVotes
             : legitimateVotes / totalVotes;
 
+        // Debug: Log feature usage for troubleshooting
+        if (isPhishing && phishingVotes > 0) {
+            console.log('Feature usage in phishing-voting trees:', featureUsage);
+            console.log('Phishing votes:', phishingVotes);
+            console.log('Threshold:', Math.max(1, Math.floor(phishingVotes * 0.05)));
+        }
+
         // Get feature explanations based on actual feature usage
         const explanations = this.featureExtractor.getFeatureExplanations(features, featureUsage, phishingVotes);
 

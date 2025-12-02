@@ -512,8 +512,14 @@ class URLFeatureExtractor {
         // If no feature usage data, fall back to rule-based (for backwards compatibility)
         const useDynamicExplanations = featureUsage && Object.keys(featureUsage).length > 0 && phishingVotes > 0;
         
-        // Calculate minimum usage threshold (feature must be used in at least 10% of phishing-voting trees)
-        const minUsageThreshold = Math.max(1, Math.floor(phishingVotes * 0.1));
+        // Calculate minimum usage threshold (feature must be used in at least 1% of phishing-voting trees, or at least 1 tree)
+        const minUsageThreshold = Math.max(1, Math.floor(phishingVotes * 0.01));
+        
+        // Debug logging
+        if (useDynamicExplanations && Object.keys(featureUsage).length > 0) {
+            console.log('Features used in phishing trees:', featureUsage);
+            console.log('Threshold:', minUsageThreshold);
+        }
         
         // Helper function to check if a feature should be explained
         const shouldExplain = (featureName) => {
@@ -521,8 +527,13 @@ class URLFeatureExtractor {
                 // Fall back to rule-based if no usage data
                 return true;
             }
-            // Only explain if feature was used in enough phishing-voting trees
-            return (featureUsage[featureName] || 0) >= minUsageThreshold;
+            // Only explain if feature was used in at least 1 tree that voted for phishing
+            const usageCount = featureUsage[featureName] || 0;
+            const shouldShow = usageCount >= minUsageThreshold;
+            if (usageCount > 0 && !shouldShow) {
+                console.log(`Feature ${featureName} used ${usageCount} times but below threshold ${minUsageThreshold}`);
+            }
+            return shouldShow;
         };
 
         if (features['has_ip'] && shouldExplain('has_ip')) {
