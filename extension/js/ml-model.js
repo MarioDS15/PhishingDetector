@@ -56,14 +56,27 @@ class RandomForestModel {
         // Scale features
         const scaledFeatures = this.scaleFeatures(features);
 
-        // Get predictions from all trees
+        // Get predictions from all trees and track feature usage
         const treePredictions = [];
         const treeConfidences = [];
+        const featureUsage = {}; // Track which features are used in phishing-voting trees
+        const allFeatureUsage = {}; // Track all feature usage
 
         for (const tree of this.modelData.trees) {
-            const result = this.predictTree(tree, scaledFeatures);
+            const usedFeatures = new Set();
+            const result = this.predictTreeWithTracking(tree, scaledFeatures, usedFeatures);
             treePredictions.push(result.class);
             treeConfidences.push(result.confidence);
+            
+            // Track feature usage
+            usedFeatures.forEach(featureName => {
+                allFeatureUsage[featureName] = (allFeatureUsage[featureName] || 0) + 1;
+                
+                // If this tree voted for phishing, track it for explanations
+                if (result.class === 0) {
+                    featureUsage[featureName] = (featureUsage[featureName] || 0) + 1;
+                }
+            });
         }
 
         // Aggregate predictions (majority vote)
@@ -77,8 +90,8 @@ class RandomForestModel {
             ? phishingVotes / totalVotes
             : legitimateVotes / totalVotes;
 
-        // Get feature explanations
-        const explanations = this.featureExtractor.getFeatureExplanations(features);
+        // Get feature explanations based on actual feature usage
+        const explanations = this.featureExtractor.getFeatureExplanations(features, featureUsage, phishingVotes);
 
         return {
             isPhishing: isPhishing,
@@ -113,6 +126,32 @@ class RandomForestModel {
             return this.predictTree(node.left, features);
         } else {
             return this.predictTree(node.right, features);
+        }
+    }
+
+    /**
+     * Predict using a single decision tree with feature tracking
+     */
+    predictTreeWithTracking(node, features, usedFeatures) {
+        // If leaf node, return the prediction
+        if (node.leaf) {
+            return {
+                class: node.class,
+                confidence: node.confidence
+            };
+        }
+
+        // Track that this feature was used
+        usedFeatures.add(node.feature);
+
+        // Get feature value
+        const featureValue = features[node.feature];
+
+        // Traverse tree
+        if (featureValue <= node.threshold) {
+            return this.predictTreeWithTracking(node.left, features, usedFeatures);
+        } else {
+            return this.predictTreeWithTracking(node.right, features, usedFeatures);
         }
     }
 

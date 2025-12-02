@@ -62,7 +62,7 @@ function showPhishingWarning(data) {
             <div id="phishing-warning-disclaimer">
                 ${data.detectionType === 'combined' ? `
                     ⚡ This warning uses combined URL + Page analysis (${data.confidencePercent}% confidence).<br>
-                    URL: ${data.urlPrediction.confidencePercent}% | Page: ${data.pagePrediction.confidencePercent}%
+                    URL: ${data.urlPrediction.phishingPercent || data.urlPrediction.confidencePercent}% phishing | Page: ${data.pagePrediction.phishingPercent || data.pagePrediction.confidencePercent}% phishing
                 ` : data.detectionType === 'url' || data.detectionType === 'url_only' ? `
                     ⚡ This warning is based on URL analysis only (${data.confidencePercent}% confidence).
                 ` : `

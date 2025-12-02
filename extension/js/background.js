@@ -80,11 +80,8 @@ function cachePrediction(url, result) {
 function shouldSkipURL(url) {
     if (!url) return true;
 
-    // Skip localhost and file:// URLs for testing
-    if (url.startsWith('file://') ||
-        url.includes('localhost') ||
-        url.includes('127.0.0.1') ||
-        url.includes('0.0.0.0')) {
+    // Skip file:// URLs for testing
+    if (url.startsWith('file://')) {
         return true;
     }
 
@@ -189,6 +186,10 @@ function combinePredictions(urlResult, pageResult) {
     // Get top features from page model
     const topFeatures = pageResult.topFeatures || [];
 
+    // Calculate phishing confidence percentages for display
+    const urlPhishingPercent = Math.round(urlPhishingProb * 100);
+    const pagePhishingPercent = Math.round(pagePhishingProb * 100);
+
     return {
         isPhishing: isPhishing,
         confidence: confidence,
@@ -197,12 +198,14 @@ function combinePredictions(urlResult, pageResult) {
         urlPrediction: {
             isPhishing: urlResult.isPhishing,
             confidence: urlResult.confidence,
-            confidencePercent: urlResult.confidencePercent
+            confidencePercent: urlResult.confidencePercent,
+            phishingPercent: urlPhishingPercent  // Phishing probability for display
         },
         pagePrediction: {
             isPhishing: pageResult.isPhishing,
             confidence: pageResult.confidence,
-            confidencePercent: pageResult.confidencePercent
+            confidencePercent: pageResult.confidencePercent,
+            phishingPercent: pagePhishingPercent  // Phishing probability for display
         },
         explanations: explanations,
         topFeatures: topFeatures,
