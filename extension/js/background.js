@@ -4,7 +4,7 @@
  */
 
 // Import scripts (Manifest V3 style)
-importScripts('url-features.js', 'ml-model.js', 'page-features.js', 'page-model.js');
+importScripts('url-features.js', 'weighted-model.js', 'page-features.js', 'page-model.js');
 
 // Model instances
 let urlModel = null;
@@ -29,10 +29,10 @@ async function initializeModels() {
     try {
         console.log('Initializing phishing detection models...');
 
-        // Load URL model
-        urlModel = new RandomForestModel();
-        await urlModel.loadModel('/models/model_lite.json');
-        console.log('✓ URL model loaded successfully!');
+        // Load weighted URL model (domain + path)
+        urlModel = new WeightedPhishingModel(0.85, 0.15); // 85% domain, 15% path
+        await urlModel.loadModels('/models/domain_model_lite.json', '/models/path_model_lite.json');
+        console.log('✓ Weighted URL model (domain + path) loaded successfully!');
 
         // Load Page model
         pageModel = new PagePhishingModel();
@@ -117,10 +117,13 @@ async function analyzeURL(url, tabId) {
             await initializeModels();
         }
 
-        // Predict using URL model
+        // Predict using weighted URL model
         console.log('Analyzing URL:', url);
         const result = urlModel.predict(url);
         result.detectionType = 'url';
+        
+        // Map weighted model result to expected format
+        result.confidencePercent = result.phishingPercent || result.confidencePercent;
 
         // Cache the URL prediction
         cachePrediction(url, result);
@@ -169,8 +172,10 @@ function combinePredictions(urlResult, pageResult) {
     }
 
     // Calculate weighted combined confidence
-    // For phishing: use the phishing probability from each model
-    const urlPhishingProb = urlResult.isPhishing ? urlResult.confidence : (1 - urlResult.confidence);
+    // URL model already returns weighted domain+path prediction
+    // Now combine with page model
+    const urlPhishingProb = urlResult.phishingPercent ? urlResult.phishingPercent / 100 : 
+                           (urlResult.isPhishing ? urlResult.confidence : (1 - urlResult.confidence));
     const pagePhishingProb = pageResult.isPhishing ? pageResult.confidence : (1 - pageResult.confidence);
 
     const combinedPhishingProb = (URL_WEIGHT * urlPhishingProb) + (PAGE_WEIGHT * pagePhishingProb);
@@ -178,10 +183,37 @@ function combinePredictions(urlResult, pageResult) {
     const confidence = isPhishing ? combinedPhishingProb : (1 - combinedPhishingProb);
 
     // Combine explanations from both models
-    const explanations = [
-        ...(urlResult.explanations || []),
-        ...(pageResult.explanations || [])
-    ];
+    // URL explanations are already limited to top 4 most impactful
+    // Page explanations are limited to top 3
+    // We'll prioritize URL explanations (they have impact scores) and limit total to 4
+    let explanations = [];
+    
+    // Add URL explanations first (already sorted by impact, max 4)
+    if (urlResult.explanations && urlResult.explanations.length > 0) {
+        explanations.push(...urlResult.explanations);
+    }
+    
+    // Add page explanations if we have room (page explanations are strings, not objects)
+    if (pageResult.explanations && pageResult.explanations.length > 0) {
+        // Convert page explanation objects to strings if needed
+        const pageExplanations = pageResult.explanations.map(exp => {
+            if (typeof exp === 'string') {
+                return exp;
+            } else if (exp && exp.text) {
+                return exp.text;
+            }
+            return null;
+        }).filter(exp => exp !== null);
+        
+        // Only add page explanations if we have fewer than 4 total
+        const remainingSlots = 4 - explanations.length;
+        if (remainingSlots > 0) {
+            explanations.push(...pageExplanations.slice(0, remainingSlots));
+        }
+    }
+    
+    // Ensure we only return top 4
+    explanations = explanations.slice(0, 4);
 
     // Get top features from page model
     const topFeatures = pageResult.topFeatures || [];
@@ -198,8 +230,10 @@ function combinePredictions(urlResult, pageResult) {
         urlPrediction: {
             isPhishing: urlResult.isPhishing,
             confidence: urlResult.confidence,
-            confidencePercent: urlResult.confidencePercent,
-            phishingPercent: urlPhishingPercent  // Phishing probability for display
+            confidencePercent: urlResult.phishingPercent || urlPhishingPercent,
+            phishingPercent: urlResult.phishingPercent || urlPhishingPercent,  // Phishing probability for display
+            domainPhishingPercent: urlResult.domainPhishingPercent || 0,
+            pathPhishingPercent: urlResult.pathPhishingPercent || 0
         },
         pagePrediction: {
             isPhishing: pageResult.isPhishing,

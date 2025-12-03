@@ -1,0 +1,125 @@
+================================================================================
+URL Phishing Detection Model - Evaluation Results
+================================================================================
+
+Generated: 2025-12-02 13:47:03
+Model: cli_detector.joblib
+Dataset: URL_Set.csv
+
+--------------------------------------------------------------------------------
+DATASET INFORMATION
+--------------------------------------------------------------------------------
+Test Set Size: 35,570 samples
+  Legitimate URLs: 20,484
+  Phishing URLs: 15,086
+
+--------------------------------------------------------------------------------
+PERFORMANCE METRICS
+--------------------------------------------------------------------------------
+Accuracy:  0.9933 (99.33%)
+Precision: 0.9945 (99.45%)
+Recall:    0.9938 (99.38%)
+F1-Score:  0.9942 (99.42%)
+ROC AUC:   0.9947 (99.47%)
+
+--------------------------------------------------------------------------------
+CONFUSION MATRIX
+--------------------------------------------------------------------------------
+                    Predicted
+                 Legitimate  Phishing
+Actual Legitimate     14973       113
+        Phishing        126     20358
+
+True Negatives (Correctly identified legitimate): 14,973
+False Positives (Legitimate misclassified as phishing): 113
+False Negatives (Phishing misclassified as legitimate): 126
+True Positives (Correctly identified phishing): 20,358
+
+Specificity (True Negative Rate): 0.9925 (99.25%)
+Sensitivity (True Positive Rate): 0.9938 (99.38%)
+
+--------------------------------------------------------------------------------
+FEATURE IMPORTANCE (Top 20)
+--------------------------------------------------------------------------------
+Rank   Feature                                  Importance      Percentage     
+--------------------------------------------------------------------------------
+1      uses_https                               0.223818        22.38          %
+2      uses_http                                0.193225        19.32          %
+3      num_slashes                              0.124849        12.48          %
+4      path_depth                               0.106567        10.66          %
+5      path_length                              0.092108        9.21           %
+6      digit_ratio                              0.039604        3.96           %
+7      brand_similarity_subdomain               0.039324        3.93           %
+8      trailing_slash                           0.033703        3.37           %
+9      url_length                               0.020414        2.04           %
+10     brand_similarity_path                    0.018978        1.90           %
+11     url_entropy                              0.017166        1.72           %
+12     has_numbers_in_domain                    0.015352        1.54           %
+13     subdomain_count                          0.013640        1.36           %
+14     domain_length                            0.012210        1.22           %
+15     letter_ratio                             0.010275        1.03           %
+16     num_dots                                 0.006905        0.69           %
+17     has_subdomain                            0.006690        0.67           %
+18     has_suspicious_tld                       0.005696        0.57           %
+19     domain_entropy                           0.005281        0.53           %
+20     domain_name_length                       0.003997        0.40           %
+
+--------------------------------------------------------------------------------
+ALL FEATURES (Complete List)
+--------------------------------------------------------------------------------
+Rank   Feature                                  Importance      Percentage     
+--------------------------------------------------------------------------------
+1      uses_https                               0.223818        22.38          %
+2      uses_http                                0.193225        19.32          %
+3      num_slashes                              0.124849        12.48          %
+4      path_depth                               0.106567        10.66          %
+5      path_length                              0.092108        9.21           %
+6      digit_ratio                              0.039604        3.96           %
+7      brand_similarity_subdomain               0.039324        3.93           %
+8      trailing_slash                           0.033703        3.37           %
+9      url_length                               0.020414        2.04           %
+10     brand_similarity_path                    0.018978        1.90           %
+11     url_entropy                              0.017166        1.72           %
+12     has_numbers_in_domain                    0.015352        1.54           %
+13     subdomain_count                          0.013640        1.36           %
+14     domain_length                            0.012210        1.22           %
+15     letter_ratio                             0.010275        1.03           %
+16     num_dots                                 0.006905        0.69           %
+17     has_subdomain                            0.006690        0.67           %
+18     has_suspicious_tld                       0.005696        0.57           %
+19     domain_entropy                           0.005281        0.53           %
+20     domain_name_length                       0.003997        0.40           %
+21     special_char_ratio                       0.002360        0.24           %
+22     num_hyphens                              0.002273        0.23           %
+23     brand_similarity_registered              0.001762        0.18           %
+24     tld_length                               0.001410        0.14           %
+25     has_suspicious_keywords                  0.001044        0.10           %
+26     num_question_marks                       0.000584        0.06           %
+27     has_file_extension                       0.000286        0.03           %
+28     brand_mismatch                           0.000218        0.02           %
+29     brand_in_registered_domain               0.000083        0.01           %
+30     brand_in_subdomain                       0.000068        0.01           %
+31     suspicious_brand_usage                   0.000047        0.00           %
+32     num_equals                               0.000021        0.00           %
+33     brand_homograph                          0.000015        0.00           %
+34     has_shortener                            0.000011        0.00           %
+35     query_length                             0.000008        0.00           %
+36     num_underscores                          0.000002        0.00           %
+37     brand_in_path_or_query                   0.000002        0.00           %
+38     has_at_symbol                            0.000001        0.00           %
+39     num_params                               0.000000        0.00           %
+40     num_percentages                          0.000000        0.00           %
+41     suspicious_file_ext                      0.000000        0.00           %
+42     has_suspicious_params                    0.000000        0.00           %
+43     has_port                                 0.000000        0.00           %
+44     num_ampersands                           0.000000        0.00           %
+45     obfuscation_ratio                        0.000000        0.00           %
+46     has_ip                                   0.000000        0.00           %
+47     double_slash                             0.000000        0.00           %
+48     has_obfuscation                          0.000000        0.00           %
+49     has_mixed_case                           0.000000        0.00           %
+50     num_obfuscated_chars                     0.000000        0.00           %
+
+================================================================================
+END OF REPORT
+================================================================================

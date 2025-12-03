@@ -108,6 +108,37 @@ class PhishingDetector:
         features['has_file_extension'] = 1 if '.' in path.split('/')[-1] and len(path.split('/')[-1]) > 0 else 0
         features['suspicious_file_ext'] = self._has_suspicious_file_extension(path)
         
+        # Additional path features
+        path_segments = [seg for seg in path.split('/') if seg] if path else []
+        features['path_segment_count'] = len(path_segments)
+        features['avg_path_segment_length'] = sum(len(seg) for seg in path_segments) / len(path_segments) if path_segments else 0
+        features['max_path_segment_length'] = max((len(seg) for seg in path_segments), default=0)
+        features['path_entropy'] = self._calculate_entropy(path) if path else 0
+        features['path_has_numbers'] = 1 if re.search(r'\d', path) else 0
+        features['path_has_special_chars'] = 1 if re.search(r'[^a-zA-Z0-9/._-]', path) else 0
+        features['path_digit_ratio'] = sum(c.isdigit() for c in path) / len(path) if path else 0
+        features['path_letter_ratio'] = sum(c.isalpha() for c in path) / len(path) if path else 0
+        
+        # Common legitimate path patterns
+        legitimate_paths = ['login', 'home', 'about', 'contact', 'index', 'main', 'page', 
+                           'help', 'support', 'faq', 'terms', 'privacy', 'search', 'blog',
+                           'news', 'events', 'calendar', 'directory', 'sitemap']
+        path_lower = path.lower() if path else ''
+        features['has_legitimate_path'] = 1 if any(legit in path_lower for legit in legitimate_paths) else 0
+        features['legitimate_path_count'] = sum(1 for legit in legitimate_paths if legit in path_lower)
+        
+        # Common suspicious path patterns
+        suspicious_paths = ['verify', 'confirm', 'update', 'secure', 'account', 'validate',
+                          'authenticate', 'signin', 'signup', 'password', 'reset', 'recover']
+        features['has_suspicious_path'] = 1 if any(susp in path_lower for susp in suspicious_paths) else 0
+        features['suspicious_path_count'] = sum(1 for susp in suspicious_paths if susp in path_lower)
+        
+        # Path structure patterns
+        features['path_starts_with_slash'] = 1 if path and path.startswith('/') else 0
+        features['path_ends_with_slash'] = 1 if path and path.endswith('/') else 0
+        features['path_has_double_slash'] = 1 if '//' in path else 0
+        features['path_has_query_in_path'] = 1 if '?' in path else 0  # Query in path (malformed)
+        
         # Query parameter analysis
         features['num_params'] = len(parse_qs(query)) if query else 0
         features['has_suspicious_params'] = self._has_suspicious_params(query)
@@ -124,6 +155,224 @@ class PhishingDetector:
         features['uses_http'] = 1 if url.startswith('http://') else 0
         
         return features
+    
+    def extract_domain_features(self, domain, protocol=''):
+        """
+        Extract features ONLY from domain component (and protocol).
+        All features are domain-specific.
+        """
+        features = {}
+        
+        # Parse domain components
+        extracted = self.tld_extractor(f"http://{domain}")  # tldextract needs full URL
+        
+        # Domain length and structure
+        features['domain_length'] = len(domain)
+        features['domain_name_length'] = len(extracted.domain)
+        features['tld_length'] = len(extracted.suffix)
+        features['subdomain_count'] = len(extracted.subdomain.split('.')) if extracted.subdomain else 0
+        features['has_subdomain'] = 1 if extracted.subdomain else 0
+        
+        # Domain character analysis
+        features['domain_num_dots'] = domain.count('.')
+        features['domain_num_hyphens'] = domain.count('-')
+        features['domain_num_underscores'] = domain.count('_')
+        features['domain_has_at_symbol'] = 1 if '@' in domain else 0
+        features['domain_has_port'] = 1 if ':' in domain and domain.split(':')[-1].isdigit() else 0
+        features['domain_has_ip'] = self._has_ip_address(domain)
+        
+        # Domain statistical features
+        features['domain_digit_ratio'] = sum(c.isdigit() for c in domain) / len(domain) if domain else 0
+        features['domain_letter_ratio'] = sum(c.isalpha() for c in domain) / len(domain) if domain else 0
+        features['domain_special_char_ratio'] = sum(not c.isalnum() and c != '.' and c != '-' for c in domain) / len(domain) if domain else 0
+        features['domain_entropy'] = self._calculate_entropy(domain)
+        
+        # Domain patterns
+        features['domain_has_numbers'] = self._has_numbers_in_domain(domain)
+        features['domain_has_mixed_case'] = self._has_mixed_case(domain)
+        features['domain_has_suspicious_tld'] = self._has_suspicious_tld(extracted.suffix)
+        features['domain_has_shortener'] = self._is_shortened_url(f"http://{domain}")
+        
+        # Domain obfuscation
+        obfuscation = self._extract_obfuscation_metrics(domain)
+        features['domain_has_obfuscation'] = obfuscation.get('has_obfuscation', 0)
+        features['domain_num_obfuscated_chars'] = obfuscation.get('num_obfuscated_chars', 0)
+        features['domain_obfuscation_ratio'] = obfuscation.get('obfuscation_ratio', 0)
+        
+        # Domain suspicious keywords (check domain only)
+        domain_lower = domain.lower()
+        suspicious_keywords = [
+            'login', 'verify', 'secure', 'account', 'update', 'confirm',
+            'validate', 'authenticate', 'bank', 'paypal', 'amazon',
+            'facebook', 'google', 'apple', 'microsoft', 'support'
+        ]
+        features['domain_has_suspicious_keywords'] = 1 if any(keyword in domain_lower for keyword in suspicious_keywords) else 0
+        
+        # Brand features (domain-specific)
+        brand_features = self._brand_feature_dict_domain_only(extracted)
+        features.update(brand_features)
+        
+        # Protocol features (domain-level)
+        features['uses_https'] = 1 if protocol.lower() == 'https' else 0
+        features['uses_http'] = 1 if protocol.lower() == 'http' else 0
+        
+        return features
+    
+    def extract_path_features(self, path, query=''):
+        """
+        Extract features ONLY from path and query components.
+        All features are path/query-specific.
+        """
+        features = {}
+        
+        # Path length and structure
+        features['path_length'] = len(path)
+        features['query_length'] = len(query)
+        features['path_depth'] = path.count('/') if path else 0
+        features['path_num_slashes'] = path.count('/')
+        features['path_num_dots'] = path.count('.')
+        features['path_num_hyphens'] = path.count('-')
+        features['path_num_underscores'] = path.count('_')
+        
+        # Query parameter analysis
+        features['path_num_question_marks'] = query.count('?') if query else 0
+        features['path_num_equals'] = (path + query).count('=')
+        features['path_num_ampersands'] = (path + query).count('&')
+        features['path_num_percentages'] = (path + query).count('%')
+        features['path_num_params'] = len(parse_qs(query)) if query else 0
+        features['path_has_suspicious_params'] = self._has_suspicious_params(query)
+        
+        # Path segments
+        path_segments = [seg for seg in path.split('/') if seg] if path else []
+        features['path_segment_count'] = len(path_segments)
+        features['path_avg_segment_length'] = sum(len(seg) for seg in path_segments) / len(path_segments) if path_segments else 0
+        features['path_max_segment_length'] = max((len(seg) for seg in path_segments), default=0)
+        
+        # Path file extension
+        features['path_has_file_extension'] = 1 if '.' in path.split('/')[-1] and len(path.split('/')[-1]) > 0 else 0
+        features['path_suspicious_file_ext'] = self._has_suspicious_file_extension(path)
+        
+        # Path statistical features
+        path_query = path + query
+        features['path_digit_ratio'] = sum(c.isdigit() for c in path_query) / len(path_query) if path_query else 0
+        features['path_letter_ratio'] = sum(c.isalpha() for c in path_query) / len(path_query) if path_query else 0
+        features['path_special_char_ratio'] = sum(not c.isalnum() and c != '/' and c != '.' and c != '-' and c != '_' for c in path_query) / len(path_query) if path_query else 0
+        features['path_entropy'] = self._calculate_entropy(path_query) if path_query else 0
+        
+        # Path patterns
+        features['path_has_numbers'] = 1 if re.search(r'\d', path) else 0
+        features['path_has_special_chars'] = 1 if re.search(r'[^a-zA-Z0-9/._-]', path) else 0
+        features['path_starts_with_slash'] = 1 if path and path.startswith('/') else 0
+        features['path_ends_with_slash'] = 1 if path and path.endswith('/') else 0
+        features['path_has_double_slash'] = 1 if '//' in path else 0
+        features['path_has_query_in_path'] = 1 if '?' in path else 0  # Malformed
+        
+        # Legitimate path patterns
+        legitimate_paths = ['login', 'home', 'about', 'contact', 'index', 'main', 'page', 
+                           'help', 'support', 'faq', 'terms', 'privacy', 'search', 'blog',
+                           'news', 'events', 'calendar', 'directory', 'sitemap']
+        path_lower = path.lower() if path else ''
+        features['path_has_legitimate_path'] = 1 if any(legit in path_lower for legit in legitimate_paths) else 0
+        features['path_legitimate_path_count'] = sum(1 for legit in legitimate_paths if legit in path_lower)
+        
+        # Suspicious path patterns
+        suspicious_paths = ['verify', 'confirm', 'update', 'secure', 'account', 'validate',
+                          'authenticate', 'signin', 'signup', 'password', 'reset', 'recover']
+        features['path_has_suspicious_path'] = 1 if any(susp in path_lower for susp in suspicious_paths) else 0
+        features['path_suspicious_path_count'] = sum(1 for susp in suspicious_paths if susp in path_lower)
+        
+        # Brand features (path-specific)
+        brand_features = self._brand_feature_dict_path_only(path, query)
+        features.update(brand_features)
+        
+        return features
+    
+    def extract_combined_features(self, domain, path, query, protocol=''):
+        """
+        Extract features from BOTH domain and path components.
+        Combines domain and path features with clear naming.
+        """
+        features = {}
+        
+        # Get domain features (with domain_ prefix)
+        domain_features = self.extract_domain_features(domain, protocol)
+        for key, value in domain_features.items():
+            features[key] = value
+        
+        # Get path features (with path_ prefix where needed)
+        path_features = self.extract_path_features(path, query)
+        for key, value in path_features.items():
+            features[key] = value
+        
+        # Combined/aggregate features (calculated from both)
+        full_url = f"{protocol}://{domain}{path}"
+        if query:
+            full_url += f"?{query}"
+        
+        features['combined_url_length'] = len(full_url)
+        features['combined_url_entropy'] = self._calculate_entropy(full_url)
+        features['combined_digit_ratio'] = sum(c.isdigit() for c in full_url) / len(full_url) if full_url else 0
+        features['combined_letter_ratio'] = sum(c.isalpha() for c in full_url) / len(full_url) if full_url else 0
+        features['combined_special_char_ratio'] = sum(not c.isalnum() for c in full_url) / len(full_url) if full_url else 0
+        
+        # Combined brand features
+        parsed = urlparse(full_url)
+        extracted = self.tld_extractor(full_url)
+        brand_features = self._brand_feature_dict(parsed, extracted)
+        # Rename to avoid conflicts
+        combined_brand = {}
+        for key, value in brand_features.items():
+            if key.startswith('brand_'):
+                combined_brand[f'combined_{key}'] = value
+            else:
+                combined_brand[key] = value
+        features.update(combined_brand)
+        
+        # Combined structure anomalies
+        features['combined_double_slash'] = 1 if '//' in full_url[full_url.find('://')+3:] else 0
+        features['combined_trailing_slash'] = 1 if full_url.endswith('/') else 0
+        
+        return features
+    
+    def _brand_feature_dict_domain_only(self, extracted):
+        """Brand features for domain-only extraction"""
+        registered_domain = extracted.registered_domain or extracted.domain or ""
+        core_domain = extracted.domain or registered_domain
+        registered_lower = registered_domain.lower()
+        core_lower = core_domain.lower()
+        subdomain_lower = (extracted.subdomain or "").lower()
+        
+        brand_in_registered = any(brand in registered_lower for brand in BRAND_KEYWORDS)
+        brand_in_subdomain = subdomain_lower and any(brand in subdomain_lower for brand in BRAND_KEYWORDS)
+        
+        registered_similarity = self._brand_similarity(core_lower)
+        subdomain_similarity = self._brand_similarity(subdomain_lower)
+        
+        homograph_flag = 1 if (registered_similarity >= HOMOGRAPH_THRESHOLD and registered_similarity < 1.0) else 0
+        
+        return {
+            'domain_suspicious_brand_usage': 1 if (brand_in_registered or brand_in_subdomain) else 0,
+            'domain_brand_in_registered_domain': 1 if brand_in_registered else 0,
+            'domain_brand_in_subdomain': 1 if brand_in_subdomain else 0,
+            'domain_brand_mismatch': 1 if (brand_in_registered or brand_in_subdomain) and not brand_in_registered else 0,
+            'domain_brand_similarity_registered': registered_similarity,
+            'domain_brand_similarity_subdomain': subdomain_similarity,
+            'domain_brand_homograph': homograph_flag,
+        }
+    
+    def _brand_feature_dict_path_only(self, path, query):
+        """Brand features for path-only extraction"""
+        path_query = (path or "") + (query or "")
+        path_query_lower = path_query.lower()
+        
+        brand_in_path = any(brand in path_query_lower for brand in BRAND_KEYWORDS)
+        path_similarity = self._brand_similarity(path_query_lower)
+        
+        return {
+            'path_suspicious_brand_usage': 1 if brand_in_path else 0,
+            'path_brand_in_path_or_query': 1 if brand_in_path else 0,
+            'path_brand_similarity_path': path_similarity,
+        }
     
     def _has_ip_address(self, url):
         """Check if URL contains an IP address"""
