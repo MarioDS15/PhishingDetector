@@ -4,44 +4,87 @@ A machine learning system for detecting phishing URLs using both heuristic and M
 
 ## **Purpose**
 
-This system provides multiple ways to analyze URLs for phishing detection:
-- **Quick Heuristic Detection**: Fast, rule-based detection (no training required)
-- **ML-Based Detection**: High-accuracy machine learning approach (requires training)
-- **Feature Extraction**: Detailed URL analysis for custom implementations
+This is a research project exploring how machine learning and AI can be applied to phishing detection. The system provides multiple ways to analyze URLs and page content for phishing indicators:
+
+- **URL-Based ML Detection**: Random Forest models analyzing URL structure and features
+- **Page Content-Based ML Detection**: Models analyzing rendered webpage structure and content
+- **Weighted Ensemble**: Combines domain and path analysis with configurable weights
+- **Feature Extraction**: Comprehensive feature engineering for custom implementations
+
+**Note**: This project was created for academic/research purposes to study phishing detection techniques, not as a commercial product.
 
 ## **Project Structure**
 
 ```
 CYSE610Project/
-├── ml_test.py                    # Simple ML testing script
-├── example_usage.py              # Usage examples and integration guide
-├── standalone_test.py            # Comprehensive testing script
-├── main.py                       # Main application with enhanced features
-├── requirements.txt              # Python dependencies
-├── ML/                          # Core ML components
-│   ├── phishing_detector.py     # Basic phishing detector
-│   └── URL/                     # URL-specific components
-│       ├── url_features.py           # Feature extraction utilities
-│       ├── generate_enriched_url_dataset.py
-│       ├── URL Data/                 # Datasets
-│       │   └── URL_Set.csv
-│       └── URL Results/              # Cached models and reports
-└── Setup/
-    └── requirements.txt
+├── main.py                       # Main application for URL phishing detection
+├── page_main.py                  # Page-based phishing detection application
+├── cli_url_check.py              # Command-line tool for URL checking
+├── extension/                    # Chrome browser extension (production-ready)
+│   ├── js/                       # Extension JavaScript files
+│   │   ├── background.js         # Background service worker
+│   │   ├── content.js            # Content script for warnings
+│   │   ├── popup.js              # Extension popup UI
+│   │   ├── url-features.js       # URL feature extraction
+│   │   ├── weighted-model.js     # Weighted ensemble model
+│   │   └── ...
+│   ├── models/                   # Pre-trained ML models (JSON format)
+│   │   ├── domain_model_lite.json
+│   │   ├── path_model_lite.json
+│   │   ├── page_model_lite.json
+│   │   └── ...
+│   ├── manifest.json             # Extension manifest
+│   └── ...
+├── ML/                           # Core ML components and trained models
+│   ├── phishing_detector.py      # URL-based phishing detector
+│   ├── page_phishing_detector.py # Page content-based detector
+│   ├── URL/                      # URL-specific components
+│   │   ├── url_features.py       # Feature extraction utilities
+│   │   ├── weighted_predictor.py # Weighted ensemble predictor
+│   │   ├── URL Data/             # Training datasets
+│   │   │   ├── URL_Set.csv
+│   │   │   ├── URL_Set_domain_only.csv
+│   │   │   ├── URL_Set_path_only.csv
+│   │   │   └── ...
+│   │   └── URL Results/          # Trained models (.joblib format)
+│   │       ├── combined_model.joblib
+│   │       ├── domain_only_model.joblib
+│   │       ├── path_only_model.joblib
+│   │       └── cli_detector.joblib
+│   └── Page/                     # Page-based detection components
+│       ├── Page Data/            # Page datasets
+│       └── Page Results/         # Trained page models
+├── Results/                      # Analysis reports and documentation
+│   ├── URL_ML_ANALYSIS_REPORT.md
+│   ├── PAGE_ML_ANALYSIS_REPORT.md
+│   └── ...
+├── Setup/
+│   └── requirements.txt          # Python dependencies
+├── README.md                     # This file
+├── QUICK_START.md                # Quick start guide
+└── SETUP_README.md               # Setup instructions
+
+Note: Development files (training scripts, export scripts, test files, etc.) have been 
+removed from the main branch but are available in the 'dev' branch. The main branch 
+contains only the production-ready extension, trained models, and core ML logic needed 
+to use the system.
 ```
 
 ## **Quick Start**
 
-### **1. Test the ML System**
+### **1. Use the Chrome Extension (Recommended)**
+See `QUICK_START.md` and `extension/INSTALL.md` for installation and usage instructions.
+
+### **2. Run the Python Applications**
 ```bash
-# Simple ML test
-python3 ml_test.py
+# URL-based phishing detection
+python3 main.py
 
-# Comprehensive test
-python3 standalone_test.py
+# Page content-based phishing detection
+python3 page_main.py
 
-# See usage examples
-python3 example_usage.py
+# Command-line URL checker
+python3 cli_url_check.py <url>
 ```
 
 ### **2. Install Dependencies (if needed)**
@@ -59,38 +102,28 @@ pip install -r requirements.txt
 
 ## **Usage Examples**
 
-### **Quick Detection (No Training Required)**
+### **Using the Weighted Predictor (Recommended)**
 ```python
-from example_usage import quick_url_check
+from ML.URL.weighted_predictor import WeightedPhishingPredictor
 
-result = quick_url_check("https://suspicious-site.tk/login")
+predictor = WeightedPhishingPredictor(domain_weight=0.85, path_weight=0.15)
+predictor.load_models()
+
+result = predictor.predict("https://example.com")
 print(f"Phishing: {result['is_phishing']}")
-print(f"Risk Score: {result['risk_score']}/100")
+print(f"Confidence: {result['weighted_phishing_prob']:.2%}")
 ```
 
 ### **Feature Extraction**
 ```python
-from url_features import extract_all_url_features
+from ML.URL.url_features import extract_all_url_features
 
 features = extract_all_url_features("https://example.com")
 print(f"Extracted {len(features)} features")
 ```
 
-### **ML-Based Detection (After Training)**
-```python
-from phishing_detector import PhishingDetector
-
-detector = PhishingDetector()
-urls = ["https://legit.example", "https://phishing.example"]
-labels = [0, 1]  # 0 = legitimate, 1 = phishing (matches URL_Set.csv)
-
-X = detector.create_dataset(urls, labels)
-detector.train_model(X, labels)
-
-result = detector.predict_url("https://example.com")
-print(f"Prediction: {result['is_phishing']}")
-print(f"Confidence: {result['confidence']}")
-```
+### **Using Pre-trained Models**
+The repository includes pre-trained models in both `.joblib` format (for Python) and JSON format (for the browser extension). You can load and use these directly without retraining.
 
 ## **Key Features**
 
@@ -106,15 +139,15 @@ print(f"Confidence: {result['confidence']}")
 2. **ML Detection**: Random Forest classifier (99.61% accuracy)
 3. **Feature Extraction**: Detailed analysis for custom logic
 
-## **Implementation Ready**
+## **System Capabilities**
 
-The system is designed to be easily integrated into any application:
+The system demonstrates several ML approaches to phishing detection:
 
-- **Standalone Testing**: Test components independently
-- **Modular Design**: Use individual components as needed
-- **No External Dependencies**: Self-contained ML components
-- **High Accuracy**: 99.61% accuracy on test data
-- **Multiple Approaches**: Heuristic and ML-based detection
+- **Modular Design**: Core components can be used independently
+- **High Accuracy**: 99%+ accuracy on test datasets
+- **Multiple Models**: URL-based, page-based, and ensemble approaches
+- **Pre-trained Models**: Models are included and ready to use
+- **Browser Extension**: Working Chrome extension implementation
 
 ## **Performance**
 
@@ -133,19 +166,26 @@ The system is designed to be easily integrated into any application:
 - `https://goog1e-security-alert.com/verify-account` → PHISHING (High risk)
 - `https://paypa1-confirm-account.ml/secure-login` → PHISHING (High risk)
 
-## **Next Steps**
+## **Project Status & Note**
 
-1. **Test the system**: Run `python3 ml_test.py`
-2. **See examples**: Run `python3 example_usage.py`
-3. **Integrate**: Use the components in your application
-4. **Customize**: Modify features or add new detection logic
+**This is a research project**, not a production-ready product. This repository was created as part of an academic study to explore how machine learning and AI techniques can be used for phishing detection.
 
-## **Verification**
+### **What's Included in This Repository:**
+- **Trained ML Models**: Pre-trained Random Forest models for both URL and page content analysis (99%+ accuracy)
+- **Chrome Extension**: Fully functional browser extension implementing the detection system
+- **Core ML Logic**: Feature extraction, weighted ensemble predictors, and detection algorithms
+- **Analysis Reports**: Detailed reports on model performance and feature importance (in `Results/`)
 
-The system has been tested and verified to work correctly:
-- All imports working
-- All components functional
-- High accuracy achieved
-- Ready for implementation
+### **What's Not Included (Development Files):**
+Development and training files have been moved to the `dev` branch to keep the main branch clean. This includes:
+- Training scripts (`train_*.py`, `generate_*.py`)
+- Model export scripts (`export_*.py`)
+- Test files and datasets used during development
+- Visualization outputs and intermediate results
 
-**Your phishing detection ML system is ready for both testing and implementation!**
+### **Branch Structure:**
+- **`main` branch**: Contains production-ready extension, trained models, and core code
+- **`dev` branch**: Contains all development files, training scripts, and experimental code
+
+### **Important Disclaimer:**
+This system was developed for educational and research purposes. While it demonstrates effective phishing detection capabilities, it should not be relied upon as the sole security measure. The models were trained on specific datasets and may not generalize perfectly to all real-world scenarios.
