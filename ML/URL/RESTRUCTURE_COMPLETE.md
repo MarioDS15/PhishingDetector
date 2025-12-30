@@ -1,4 +1,4 @@
-# Dataset Restructure - Implementation Complete ✅
+# Dataset Restructure - Implementation Complete
 
 ## Summary
 
@@ -6,7 +6,7 @@ Successfully restructured datasets to have **true component separation** with no
 
 ## What Was Done
 
-### 1. ✅ Component-Specific Feature Extraction Methods
+### 1. Component-Specific Feature Extraction Methods
 
 Created three new extraction methods in `ML/phishing_detector.py`:
 
@@ -27,7 +27,7 @@ Created three new extraction methods in `ML/phishing_detector.py`:
   - Includes combined/aggregate features (e.g., `combined_url_length`)
   - 83 total features
 
-### 2. ✅ New Dataset Structure
+### 2. New Dataset Structure
 
 Generated three component-specific datasets:
 
@@ -56,7 +56,7 @@ Generated three component-specific datasets:
   - `label` - Classification label
   - 83 combined features (domain + path + combined aggregate features)
 
-### 3. ✅ Model Retraining
+### 3. Model Retraining
 
 Retrained all three models with new component-specific datasets:
 
@@ -78,14 +78,14 @@ Retrained all three models with new component-specific datasets:
   - F1-Score: 99.71%
   - ROC AUC: 99.83%
 
-### 4. ✅ Updated Weighted Predictor
+### 4. Updated Weighted Predictor
 
 Updated `ML/URL/weighted_predictor.py` to:
 - Accept URL strings directly (extracts components automatically)
 - Use component-specific extraction methods
 - Properly handle domain and path feature separation
 
-### 5. ✅ Model Export
+### 5. Model Export
 
 Exported models to JavaScript format:
 - `extension/models/domain_model_lite.json` (2.2 MB, 30 trees, 32 features)
@@ -100,10 +100,10 @@ Exported models to JavaScript format:
 
 ## Benefits
 
-✅ **No Feature Leakage:** Domain features calculated ONLY from domain, path features ONLY from path
-✅ **Clear Separation:** Component columns make it explicit what each feature is derived from
-✅ **Better Interpretability:** Can clearly see which component contributes to predictions
-✅ **Maintainability:** Easier to understand and modify feature extraction
+**No Feature Leakage:** Domain features calculated ONLY from domain, path features ONLY from path
+**Clear Separation:** Component columns make it explicit what each feature is derived from
+**Better Interpretability:** Can clearly see which component contributes to predictions
+**Maintainability:** Easier to understand and modify feature extraction
 
 ## Next Steps (Extension Update)
 
@@ -115,18 +115,18 @@ The extension JavaScript code needs to be updated to:
 
 ## Files Modified
 
-- ✅ `ML/phishing_detector.py` - Added component-specific extraction methods
-- ✅ `ML/URL/generate_component_datasets.py` - New dataset generation script
-- ✅ `ML/URL/train_separate_models.py` - Updated to use new datasets
-- ✅ `ML/URL/weighted_predictor.py` - Updated to use component extraction
-- ✅ `ML/URL/URL Data/URL_Set_domain_only.csv` - Regenerated with new structure
-- ✅ `ML/URL/URL Data/URL_Set_path_only.csv` - Regenerated with new structure
-- ✅ `ML/URL/URL Data/URL_Set_combined.csv` - New combined dataset
-- ✅ `ML/URL/URL Results/domain_only_model.joblib` - Retrained model
-- ✅ `ML/URL/URL Results/path_only_model.joblib` - Retrained model
-- ✅ `ML/URL/URL Results/combined_model.joblib` - Retrained model
-- ✅ `extension/models/domain_model_lite.json` - Exported JavaScript model
-- ✅ `extension/models/path_model_lite.json` - Exported JavaScript model
+- `ML/phishing_detector.py` - Added component-specific extraction methods
+- `ML/URL/generate_component_datasets.py` - New dataset generation script
+- `ML/URL/train_separate_models.py` - Updated to use new datasets
+- `ML/URL/weighted_predictor.py` - Updated to use component extraction
+- `ML/URL/URL Data/URL_Set_domain_only.csv` - Regenerated with new structure
+- `ML/URL/URL Data/URL_Set_path_only.csv` - Regenerated with new structure
+- `ML/URL/URL Data/URL_Set_combined.csv` - New combined dataset
+- `ML/URL/URL Results/domain_only_model.joblib` - Retrained model
+- `ML/URL/URL Results/path_only_model.joblib` - Retrained model
+- `ML/URL/URL Results/combined_model.joblib` - Retrained model
+- `extension/models/domain_model_lite.json` - Exported JavaScript model
+- `extension/models/path_model_lite.json` - Exported JavaScript model
 
 ## Testing
 
@@ -147,5 +147,7 @@ print(f"Path: {result['path_phishing_prob']:.2%} phishing")
 
 ---
 
-**Status:** ✅ Core restructuring complete. Extension update pending.
+**Status:** Core restructuring complete. Extension update pending.
+
+
 
