@@ -13,7 +13,7 @@
 3. **Load Extension**
    - Click "Load unpacked"
    - Select `extension/` folder
-   - ✅ Done!
+   - Done!
 
 ## Test It
 
@@ -23,9 +23,9 @@
 
 ## What to Expect
 
-- 🟢 **Safe sites**: Brief green badge, no warnings
-- 🔴 **Suspicious sites**: Full-screen warning with reasons
-- 📊 **Popup**: Shows confidence score and detected features
+- **Safe sites**: Brief green badge, no warnings
+- **Suspicious sites**: Full-screen warning with reasons
+- **Popup**: Shows confidence score and detected features
 
 ## Files Overview
 

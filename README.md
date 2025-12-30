@@ -30,7 +30,7 @@ CYSE610Project/
     └── requirements.txt
 ```
 
-## 🚀 **Quick Start**
+## **Quick Start**
 
 ### **1. Test the ML System**
 ```bash
@@ -123,7 +123,7 @@ The system is designed to be easily integrated into any application:
 - **Accuracy**: 99.61% on test set
 - **Speed**: Heuristic detection is instant, ML detection requires training
 
-## 🔍 **Sample Results**
+## **Sample Results**
 
 ### **Legitimate URLs**
 - `https://www.google.com` → SAFE (Low risk)
@@ -148,4 +148,4 @@ The system has been tested and verified to work correctly:
 - High accuracy achieved
 - Ready for implementation
 
-**🎉 Your phishing detection ML system is ready for both testing and implementation!**
+**Your phishing detection ML system is ready for both testing and implementation!**

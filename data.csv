@@ -1,4 +1,0 @@
-URL,label,LineOfCode,LargestLineLength,HasTitle,Title,DomainTitleMatchScore,URLTitleMatchScore,HasFavicon,Robots,IsResponsive,NoOfURLRedirect,NoOfSelfRedirect,HasDescription,NoOfPopup,NoOfiFrame,HasExternalFormSubmit,HasSocialNet,HasSubmitButton,HasHiddenFields,HasPasswordField,Bank,Pay,Crypto,HasCopyrightInfo,NoOfImage,NoOfCSS,NoOfJS,NoOfSelfRef,NoOfEmptyRef,NoOfExternalRef
-https://google.com,,14,3073,1,Google,1.0,0.0,0,1,0,1,0,1,0,0,0,1,1,1,0,1,0,0,1,1,0,0,10,0,7
-https://example.com,,2,512,1,Example Domain,1.0,0.0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-https://wellsfargo.com,,2797,3543,1,Wells Fargo Bank | Financial Services & Online Banking,0.5,0.0,1,1,1,1,0,1,0,0,1,1,1,1,1,1,1,1,1,15,1,6,143,35,38

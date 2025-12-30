@@ -15,7 +15,7 @@
    - Domain component column
    - Path component column
 
-## 🚨 RED FLAGS & ISSUES
+## RED FLAGS & ISSUES
 
 ### 1. **Feature Naming Conflicts**
 
@@ -65,11 +65,11 @@ Some brand features span both domain and path:
 ### 5. **Breaking Changes**
 
 This restructure will:
-- ❌ Break existing models (feature names/order will change)
-- ❌ Require retraining all models
-- ❌ Require updating extension code
-- ❌ Require updating all training scripts
-- ❌ Require updating weighted predictor
+- Break existing models (feature names/order will change)
+- Require retraining all models
+- Require updating extension code
+- Require updating all training scripts
+- Require updating weighted predictor
 
 ### 6. **Feature Extraction Logic**
 
@@ -82,7 +82,7 @@ extract_combined_features(domain, path, query)  # Both
 
 Current `extract_features(url)` calculates everything from full URL.
 
-## ✅ RECOMMENDED APPROACH
+## RECOMMENDED APPROACH
 
 ### Option A: Component-Specific Feature Extraction (Your Proposal)
 
@@ -120,7 +120,7 @@ Current `extract_features(url)` calculates everything from full URL.
 - Keep domain-only features truly domain-only
 - Keep path-only features truly path-only
 
-## 🎯 RECOMMENDATION
+## RECOMMENDATION
 
 **Proceed with Option A** (your proposal) BUT:
 
@@ -143,7 +143,7 @@ Current `extract_features(url)` calculates everything from full URL.
    - Phase 4: Update extension
    - Phase 5: Test thoroughly
 
-## ⚠️ CRITICAL DECISIONS NEEDED
+## CRITICAL DECISIONS NEEDED
 
 1. **Query parameters:** Domain-only, Path-only, or Separate?
 2. **Protocol (HTTPS/HTTP):** Domain-only or Combined only?

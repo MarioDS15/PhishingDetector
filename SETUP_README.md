@@ -14,7 +14,7 @@ python3 setup_everything.py
 ```
 This will automatically install everything needed (requires pip3).
 
-## 📋 Manual Setup
+## Manual Setup
 
 ### 1. Install Python Dependencies
 ```bash
@@ -41,7 +41,7 @@ Run the quick check to verify everything is working:
 python3 quick_setup.py
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 Once setup is complete, you can run:
 
@@ -75,7 +75,7 @@ CYSE610Project/
 └── requirements.txt             # Main requirements file
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Import Errors
 - Make sure `ML/__init__.py` exists
@@ -96,7 +96,7 @@ CYSE610Project/
 - **Directories**: All necessary folders for data and results
 - **ML Modules**: All core ML components for phishing detection
 
-## 🎯 Ready to Use!
+## Ready to Use!
 
 Once setup is complete, your phishing detection ML system will be ready for:
 - Testing ML models
